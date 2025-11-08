@@ -93,7 +93,42 @@ uvicorn main:app --reload
 
 API available at [http://localhost:8000](http://localhost:8000)
 
-### 4. Contract Deploy (Testnet)
+### 4. IPFS Setup (Optional)
+
+**For Local Development:**
+
+```bash
+# Install IPFS Desktop or Kubo CLI
+# https://docs.ipfs.tech/install/
+
+# Start IPFS daemon
+ipfs daemon
+
+# Verify it's running
+curl http://127.0.0.1:5001/api/v0/version
+```
+
+**For Production (Infura or Pinata):**
+
+```bash
+# Option 1: Infura IPFS
+# Sign up at https://infura.io
+# Add to backend/.env:
+IPFS_API_URL=https://ipfs.infura.io:5001
+IPFS_PROJECT_ID=your_project_id
+IPFS_PROJECT_SECRET=your_secret
+
+# Option 2: Pinata
+# Sign up at https://pinata.cloud
+# Add to backend/.env:
+IPFS_API_URL=https://api.pinata.cloud
+PINATA_API_KEY=your_api_key
+PINATA_SECRET_KEY=your_secret
+```
+
+**Note:** IPFS is optional. Users can use local IndexedDB storage only. See [docs/IPFS.md](docs/IPFS.md) for details.
+
+### 5. Contract Deploy (Testnet)
 
 ```bash
 cd contracts
@@ -144,8 +179,8 @@ See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for details.
 ## 📋 Roadmap
 
 - [x] **Week 1:** Scoping & skeleton
-- [x] **Week 2:** Wallet connect + FA2 contract + Backend scaffold ← **You are here**
-- [ ] **Week 3:** Private journal + encryption
+- [x] **Week 2:** Wallet connect + FA2 contract + Backend scaffold
+- [x] **Week 3:** Client-side encryption + IPFS integration ← **You are here**
 - [ ] **Week 4:** Proof submission + AI verify
 - [ ] **Week 5:** Generative NFT art
 - [ ] **Week 6:** Hardening + testnet demo
@@ -169,7 +204,10 @@ See [Proof-of-Becoming.claudemd](Proof-of-Becoming.claudemd) for full plan.
 - [Proof-of-Becoming.claudemd](Proof-of-Becoming.claudemd) — Build plan
 - [CHECKLISTS/PR_CHECKLIST.md](CHECKLISTS/PR_CHECKLIST.md) — PR review guide
 - [RESEARCH_PROTOCOL.md](RESEARCH_PROTOCOL.md) — How we research & document
-- `docs/` — ADRs, threat model, user guides
+- [docs/ENCRYPTION.md](docs/ENCRYPTION.md) — Client-side encryption guide
+- [docs/IPFS.md](docs/IPFS.md) — IPFS integration guide
+- [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) — Security threat model
+- `docs/` — ADRs and technical guides
 
 ---
 

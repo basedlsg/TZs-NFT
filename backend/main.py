@@ -9,8 +9,11 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 import os
 
+# Import API routers
+from api import ipfs
+
 # Version
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 # Create FastAPI app
 app = FastAPI(
@@ -37,6 +40,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API routers
+app.include_router(ipfs.router)
 
 
 # Response models
