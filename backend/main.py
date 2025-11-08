@@ -10,10 +10,10 @@ from pydantic import BaseModel
 import os
 
 # Import API routers
-from api import ipfs, verify
+from api import ipfs, verify, qrng
 
 # Version
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 
 # Create FastAPI app
 app = FastAPI(
@@ -44,6 +44,7 @@ app.add_middleware(
 # Include API routers
 app.include_router(ipfs.router)
 app.include_router(verify.router)
+app.include_router(qrng.router)
 
 
 # Response models
@@ -75,12 +76,7 @@ async def health_check():
 
 
 # Future endpoints (placeholders for Week 5+)
-# @app.get("/api/quantum-seed")
-# async def get_quantum_seed():
-#     """Generate quantum random seed for NFT evolution"""
-#     pass
-
-# @app.post("/api/generate-metadata")
-# async def generate_metadata(params):
-#     """Generate NFT metadata with art URI"""
+# @app.post("/api/generate-art")
+# async def generate_art(seed: str):
+#     """Generate NFT artwork from seed"""
 #     pass

@@ -160,13 +160,31 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
       const currentMetadata = await soulNFT.getTokenMetadata(tokenId);
       const nextStage = (currentMetadata?.stage || 0) + 1;
 
-      // Generate a random seed (for now, using crypto.getRandomValues)
-      // In Week 5, this will be replaced with QRNG
-      const seedArray = new Uint8Array(32);
-      crypto.getRandomValues(seedArray);
-      const seed = Array.from(seedArray)
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
+      // Generate a quantum random seed using QRNG API
+      let seed: string;
+      let seedSource: string = 'pseudo';
+
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const qrngResponse = await fetch(`${apiUrl}/api/quantum-seed`);
+
+        if (qrngResponse.ok) {
+          const qrngData = await qrngResponse.json();
+          seed = qrngData.seed;
+          seedSource = qrngData.source;
+          console.log(`Generated ${seedSource} random seed:`, seed);
+        } else {
+          throw new Error('QRNG API unavailable');
+        }
+      } catch (qrngError) {
+        console.warn('QRNG API failed, using fallback CSPRNG:', qrngError);
+        // Fallback to client-side CSPRNG
+        const seedArray = new Uint8Array(32);
+        crypto.getRandomValues(seedArray);
+        seed = Array.from(seedArray)
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+      }
 
       // Create metadata URI (for now, a simple JSON with proof hash)
       // In Week 5, this will include IPFS-hosted generative art
@@ -175,6 +193,7 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
         description: `Evolution Stage ${nextStage}`,
         stage: nextStage,
         seed,
+        seedSource,  // Indicate if seed is quantum or pseudo
         proofHash: entry.hash,
         goalId: entry.goalId,
         timestamp: Date.now(),
