@@ -90,25 +90,45 @@ Unit tests are in `soul_nft.test.mligo` (to be created).
 ./ligo run test soul_nft.test.mligo
 ```
 
-## Deployment (Testnet)
+## Contract Versions
+
+- **`soul_nft_simple.mligo`** - MVP version (recommended for quick deployment)
+  - Self-contained, no external dependencies
+  - Easier to compile and deploy
+  - Production-ready for testnet
+
+- **`soul_nft.mligo`** - Full FA2 version (requires FA2 library)
+  - Complete FA2 compliance
+  - Requires LIGO library setup
+  - Future: mainnet production version
+
+## Deployment
+
+**See [DEPLOY.md](./DEPLOY.md) for complete deployment guide.**
+
+### Quick Start (Taquito)
+
+```bash
+cd ../frontend
+DEPLOYER_PRIVATE_KEY=edsk... ADMIN_ADDRESS=tz1... npm run deploy:contract
+```
 
 ### Using Tezos CLI
 
 ```bash
+# Compile first
+npm run compile
+
 # Import admin key
 tezos-client import secret key admin <secret-key>
 
 # Originate contract
 tezos-client originate contract soul_nft \
   transferring 0 from admin \
-  running soul_nft.tz \
-  --init '(Pair "tz1..." (Pair 0 (Pair {} (Pair {} (Pair {} {})))))' \
-  --burn-cap 1
+  running build/soul_nft.tz \
+  --init '(Pair "tz1..." (Pair 0 (Pair {} (Pair {} {}))))' \
+  --burn-cap 1.0
 ```
-
-### Using Taquito (JavaScript)
-
-See `../frontend/scripts/deploy_contract.ts` for deployment script.
 
 ## Security Considerations
 

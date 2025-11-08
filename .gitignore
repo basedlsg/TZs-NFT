@@ -63,3 +63,4 @@ ENV/
 # Contract builds
 contracts/build/
 *.tz
+contracts/ligo
