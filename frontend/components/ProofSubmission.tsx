@@ -2,6 +2,8 @@
 
 import { useState, useEffect, ChangeEvent } from 'react';
 import { getDiaryEntry, DiaryEntry } from '@/lib/diaryStorage';
+import { useWallet } from '@/contexts/WalletContext';
+import { getSoulNFTContract } from '@/lib/soulNFT';
 
 interface VerificationChecks {
   validGoal: boolean;
@@ -25,9 +27,12 @@ interface ProofSubmissionProps {
 }
 
 export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmissionProps) {
+  const { account } = useWallet();
   const [entry, setEntry] = useState<DiaryEntry | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isEvolving, setIsEvolving] = useState(false);
+  const [evolutionComplete, setEvolutionComplete] = useState(false);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [secondPhotoFile, setSecondPhotoFile] = useState<File | null>(null);
@@ -125,6 +130,87 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
     }
   };
 
+  const evolveNFT = async () => {
+    if (!account) {
+      setError('Please connect your wallet to evolve your Soul NFT');
+      return;
+    }
+
+    if (!entry) {
+      setError('No entry data available');
+      return;
+    }
+
+    setIsEvolving(true);
+    setError(null);
+
+    try {
+      const soulNFT = getSoulNFTContract();
+
+      // Get user's token ID
+      const tokenId = await soulNFT.getTokenIdByOwner(account);
+
+      if (tokenId === null) {
+        setError('You don\'t have a Soul NFT yet. Please mint one first.');
+        setIsEvolving(false);
+        return;
+      }
+
+      // Get current metadata to determine next stage
+      const currentMetadata = await soulNFT.getTokenMetadata(tokenId);
+      const nextStage = (currentMetadata?.stage || 0) + 1;
+
+      // Generate a random seed (for now, using crypto.getRandomValues)
+      // In Week 5, this will be replaced with QRNG
+      const seedArray = new Uint8Array(32);
+      crypto.getRandomValues(seedArray);
+      const seed = Array.from(seedArray)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      // Create metadata URI (for now, a simple JSON with proof hash)
+      // In Week 5, this will include IPFS-hosted generative art
+      const metadata = {
+        name: `Soul NFT #${tokenId}`,
+        description: `Evolution Stage ${nextStage}`,
+        stage: nextStage,
+        seed,
+        proofHash: entry.hash,
+        goalId: entry.goalId,
+        timestamp: Date.now(),
+      };
+
+      // For now, store metadata as data URI
+      // In Week 5, this will be pinned to IPFS
+      const metadataUri = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`;
+
+      // Call evolve on the contract
+      const result = await soulNFT.evolve({
+        tokenId,
+        stage: nextStage,
+        seed,
+        metadataUri,
+      });
+
+      console.log('Evolution transaction:', result.hash);
+
+      // Wait for confirmation
+      await result.confirmation();
+
+      setEvolutionComplete(true);
+      setError(null);
+    } catch (err) {
+      console.error('Evolution error:', err);
+      if (err instanceof Error) {
+        setError(`Failed to evolve NFT: ${err.message}`);
+      } else {
+        setError('Failed to evolve NFT. Please try again.');
+      }
+    } finally {
+      setIsEvolving(false);
+    }
+  };
+
   const handleSubmit = () => {
     submitProof(false);
   };
@@ -192,6 +278,14 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
         <div className="verifying-status">
           <div className="spinner"></div>
           <p>Verifying your proof...</p>
+        </div>
+      )}
+
+      {isEvolving && (
+        <div className="evolving-status">
+          <div className="spinner"></div>
+          <p>Evolving your Soul NFT on-chain...</p>
+          <small>Please confirm the transaction in your wallet</small>
         </div>
       )}
 
@@ -283,10 +377,36 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
             </div>
           )}
 
-          {verificationResult.verified && (
+          {verificationResult.verified && !evolutionComplete && (
             <div className="success-actions">
               <p className="success-note">
                 Your proof has been verified! You can now evolve your Soul NFT.
+              </p>
+              {account ? (
+                <button
+                  onClick={evolveNFT}
+                  disabled={isEvolving}
+                  className="evolve-button"
+                >
+                  {isEvolving ? 'Evolving NFT...' : 'Evolve Soul NFT'}
+                </button>
+              ) : (
+                <p className="wallet-warning">
+                  Please connect your wallet to evolve your Soul NFT.
+                </p>
+              )}
+            </div>
+          )}
+
+          {evolutionComplete && (
+            <div className="evolution-complete">
+              <div className="evolution-header">
+                <span className="icon">🎨</span>
+                <h4>Soul NFT Evolved!</h4>
+              </div>
+              <p>
+                Your Soul NFT has successfully evolved to the next stage. Your progress has
+                been recorded on-chain.
               </p>
             </div>
           )}
@@ -560,9 +680,81 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
         }
 
         .success-note {
-          margin: 0;
+          margin: 0 0 1rem 0;
           color: #22543d;
           font-weight: 500;
+        }
+
+        .evolve-button {
+          width: 100%;
+          padding: 0.75rem 1.5rem;
+          background-color: #805ad5;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          font-size: 1rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .evolve-button:hover:not(:disabled) {
+          background-color: #6b46c1;
+        }
+
+        .evolve-button:disabled {
+          background-color: #a0aec0;
+          cursor: not-allowed;
+        }
+
+        .wallet-warning {
+          margin-top: 0.5rem;
+          color: #c05621;
+          font-size: 0.875rem;
+        }
+
+        .evolving-status {
+          text-align: center;
+          padding: 2rem;
+          background-color: #faf5ff;
+          border-radius: 8px;
+          border: 1px solid #d6bcfa;
+          margin-bottom: 1.5rem;
+        }
+
+        .evolving-status small {
+          display: block;
+          margin-top: 0.5rem;
+          color: #6b46c1;
+          font-size: 0.875rem;
+        }
+
+        .evolution-complete {
+          padding: 1.5rem;
+          background-color: #faf5ff;
+          border-radius: 8px;
+          border: 1px solid #d6bcfa;
+        }
+
+        .evolution-header {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .evolution-header .icon {
+          font-size: 2rem;
+        }
+
+        .evolution-header h4 {
+          margin: 0;
+          color: #553c9a;
+        }
+
+        .evolution-complete p {
+          margin: 0;
+          color: #44337a;
         }
 
         .loading,
