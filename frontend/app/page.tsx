@@ -1,13 +1,22 @@
+'use client';
+
+import WalletButton from '@/components/WalletButton';
+
 export default function Home() {
   return (
     <main className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-4">
-          Proof of Becoming
-        </h1>
-        <p className="text-lg text-gray-600 mb-8">
-          Private ritual journaling with evolving Soul NFTs on Tezos
-        </p>
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-4">
+              Proof of Becoming
+            </h1>
+            <p className="text-lg text-gray-600">
+              Private ritual journaling with evolving Soul NFTs on Tezos
+            </p>
+          </div>
+          <WalletButton />
+        </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="p-6 border rounded-lg">
@@ -41,7 +50,7 @@ export default function Home() {
 
         <div className="mt-8 p-4 bg-blue-50 rounded-lg">
           <p className="text-sm text-blue-800">
-            <strong>Status:</strong> MVP in development - Week 1 (Skeleton)
+            <strong>Status:</strong> MVP in development - Week 2 (Wallet Connect)
           </p>
         </div>
       </div>
