@@ -64,3 +64,11 @@ ENV/
 contracts/build/
 *.tz
 contracts/ligo
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Lock files (optional, but can add noise)
+# Uncomment if you want to ignore lock files
+# package-lock.json
+# yarn.lock
