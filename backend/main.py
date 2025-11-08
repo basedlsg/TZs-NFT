@@ -3,17 +3,21 @@ Proof of Becoming Backend API
 FastAPI application for AI verification, quantum seed generation, and IPFS management
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
+from slowapi.errors import RateLimitExceeded
 import os
 
 # Import API routers
 from api import ipfs, verify, qrng
 
+# Import rate limiting
+from middleware.ratelimit import limiter, rate_limit_exceeded_handler
+
 # Version
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 
 # Create FastAPI app
 app = FastAPI(
@@ -23,6 +27,12 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Add rate limiter state
+app.state.limiter = limiter
+
+# Add rate limit exception handler
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # CORS configuration
 # Allow frontend to access API

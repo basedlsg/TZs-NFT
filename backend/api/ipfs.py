@@ -5,12 +5,13 @@ All data is encrypted client-side before pinning to IPFS
 This ensures privacy even on public IPFS network
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from pydantic import BaseModel, Field
 import base64
 import os
 import httpx
 from typing import Optional, Dict, Any
+from middleware.ratelimit import limiter, IPFS_LIMIT
 
 
 router = APIRouter(prefix="/api/ipfs", tags=["ipfs"])
@@ -144,7 +145,8 @@ async def retrieve_from_ipfs(cid: str) -> bytes:
 
 # Endpoints
 @router.post("/pin", response_model=PinResponse)
-async def pin_encrypted_data(request: PinRequest):
+@limiter.limit(IPFS_LIMIT)
+async def pin_encrypted_data(request: Request, body: PinRequest):
     """
     Pin encrypted data to IPFS
 
@@ -157,7 +159,7 @@ async def pin_encrypted_data(request: PinRequest):
     """
     # Decode base64 data
     try:
-        data_bytes = base64.b64decode(request.data)
+        data_bytes = base64.b64decode(body.data)
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

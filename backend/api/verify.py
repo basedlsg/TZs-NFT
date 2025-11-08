@@ -9,7 +9,8 @@ import os
 import re
 from typing import Optional
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from middleware.ratelimit import limiter, VERIFY_LIMIT
 
 router = APIRouter(prefix="/api/verify", tags=["verification"])
 
@@ -244,7 +245,8 @@ Consider:
 
 
 @router.post("", response_model=VerifyResponse)
-async def verify_proof(request: VerifyRequest):
+@limiter.limit(VERIFY_LIMIT)
+async def verify_proof(request: Request, body: VerifyRequest):
     """
     Verify a proof submission for a goal.
 
@@ -255,7 +257,7 @@ async def verify_proof(request: VerifyRequest):
     """
     # Step 1: Heuristic verification
     verified, confidence, reason, checks = heuristic_verification(
-        request.goalId, request.reflection, request.imageDataUrl
+        body.goalId, body.reflection, body.imageDataUrl
     )
 
     feedback = ""
@@ -263,10 +265,10 @@ async def verify_proof(request: VerifyRequest):
     # Step 2: AI vision verification (if configured and heuristics passed)
     if verified:
         ai_adjustment, ai_feedback = await ai_vision_verification(
-            request.goalId,
-            request.reflection,
-            request.imageDataUrl,
-            request.secondImageDataUrl,
+            body.goalId,
+            body.reflection,
+            body.imageDataUrl,
+            body.secondImageDataUrl,
         )
 
         confidence = max(0, min(100, confidence + ai_adjustment))

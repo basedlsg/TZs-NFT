@@ -10,7 +10,8 @@ import secrets
 import time
 from typing import Literal
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
+from middleware.ratelimit import limiter, QRNG_LIMIT
 
 router = APIRouter(prefix="/api/quantum-seed", tags=["qrng"])
 
@@ -84,7 +85,9 @@ def get_pseudo_random_bytes(num_bytes: int) -> bytes:
 
 
 @router.get("", response_model=QuantumSeedResponse)
+@limiter.limit(QRNG_LIMIT)
 async def generate_quantum_seed(
+    request: Request,
     size: int = Query(
         DEFAULT_SEED_SIZE,
         ge=MIN_SEED_SIZE,
