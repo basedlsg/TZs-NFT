@@ -1,6 +1,7 @@
 'use client';
 
 import WalletButton from '@/components/WalletButton';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -48,9 +49,18 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="mt-8 flex justify-center">
+          <Link
+            href="/diary"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            Create Diary Entry →
+          </Link>
+        </div>
+
         <div className="mt-8 p-4 bg-blue-50 rounded-lg">
           <p className="text-sm text-blue-800">
-            <strong>Status:</strong> MVP in development - Week 2 (Wallet Connect)
+            <strong>Status:</strong> MVP in development - Week 3 (Private Journal + Encryption)
           </p>
         </div>
       </div>
