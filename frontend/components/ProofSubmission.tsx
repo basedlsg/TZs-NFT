@@ -6,6 +6,7 @@ import { useWallet } from '@/contexts/WalletContext';
 import { getSoulNFTContract } from '@/lib/soulNFT';
 import { generateArt } from '@/lib/artGenerator';
 import { pinToIPFS } from '@/lib/ipfs';
+import { validateImage, validateDataUrl } from '@/lib/validation';
 
 interface VerificationChecks {
   validGoal: boolean;
@@ -72,9 +73,12 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
       return;
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please select a valid image file');
+    // Validate image file
+    const validation = validateImage(file);
+    if (!validation.valid) {
+      setError(validation.error || 'Invalid image file');
+      setSecondPhotoFile(null);
+      setSecondPhotoDataUrl(undefined);
       return;
     }
 
@@ -92,6 +96,27 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
     if (!entry) {
       setError('No entry to verify');
       return;
+    }
+
+    // Validate entry image data URL
+    if (entry.imageDataUrl) {
+      const imageValidation = validateDataUrl(entry.imageDataUrl);
+      if (!imageValidation.valid) {
+        setError(imageValidation.error || 'Invalid image data');
+        return;
+      }
+    } else {
+      setError('No image found in diary entry');
+      return;
+    }
+
+    // Validate second photo if present
+    if (withSecondPhoto && secondPhotoDataUrl) {
+      const secondImageValidation = validateDataUrl(secondPhotoDataUrl);
+      if (!secondImageValidation.valid) {
+        setError(secondImageValidation.error || 'Invalid second image data');
+        return;
+      }
     }
 
     setIsVerifying(true);

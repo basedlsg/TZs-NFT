@@ -3,6 +3,7 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
 import { saveDiaryEntry } from '@/lib/diaryStorage';
 import { pinDiaryEntry } from '@/lib/ipfs';
+import { validateImage, validateReflection, validateGoalId } from '@/lib/validation';
 
 interface DiaryFormProps {
   onSuccess?: (entryId: string) => void;
@@ -17,9 +18,6 @@ const GOAL_OPTIONS = [
   { id: 'custom', label: 'Custom goal' },
 ];
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-
 export default function DiaryForm({ onSuccess }: DiaryFormProps) {
   const [goalId, setGoalId] = useState('');
   const [reflection, setReflection] = useState('');
@@ -33,12 +31,24 @@ export default function DiaryForm({ onSuccess }: DiaryFormProps) {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
+    // Validate goal ID
     if (!goalId) {
       newErrors.goal = 'Goal is required';
+    } else {
+      const goalValidation = validateGoalId(goalId);
+      if (!goalValidation.valid) {
+        newErrors.goal = goalValidation.error || 'Invalid goal ID';
+      }
     }
 
+    // Validate reflection
     if (!reflection.trim()) {
       newErrors.reflection = 'Reflection is required';
+    } else {
+      const reflectionValidation = validateReflection(reflection);
+      if (!reflectionValidation.valid) {
+        newErrors.reflection = reflectionValidation.error || 'Invalid reflection';
+      }
     }
 
     setErrors(newErrors);
@@ -53,15 +63,12 @@ export default function DiaryForm({ onSuccess }: DiaryFormProps) {
       return;
     }
 
-    // Validate file type
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      setErrors({ ...errors, image: 'Only images allowed (JPEG, PNG, GIF, WebP)' });
-      return;
-    }
-
-    // Validate file size
-    if (file.size > MAX_IMAGE_SIZE) {
-      setErrors({ ...errors, image: 'Image too large (max 5MB)' });
+    // Validate image file
+    const validation = validateImage(file);
+    if (!validation.valid) {
+      setErrors({ ...errors, image: validation.error || 'Invalid image file' });
+      setImageFile(null);
+      setImageDataUrl(undefined);
       return;
     }
 

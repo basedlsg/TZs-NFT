@@ -19,21 +19,21 @@ const crypto = {
   }),
 };
 
-global.crypto = crypto as any;
+global.crypto = crypto;
 
 // Mock IndexedDB
 global.indexedDB = {
   open: jest.fn(),
   deleteDatabase: jest.fn(),
   databases: jest.fn(),
-} as any;
+};
 
 // Mock FileReader
 global.FileReader = class FileReader {
-  result: string | ArrayBuffer | null = null;
-  onload: ((this: FileReader, ev: ProgressEvent) => any) | null = null;
+  result = null;
+  onload = null;
 
-  readAsDataURL(blob: Blob) {
+  readAsDataURL(blob) {
     setTimeout(() => {
       this.result = 'data:image/png;base64,fake-image-data';
       if (this.onload) {
@@ -42,7 +42,7 @@ global.FileReader = class FileReader {
     }, 0);
   }
 
-  readAsArrayBuffer(blob: Blob) {
+  readAsArrayBuffer(blob) {
     setTimeout(() => {
       this.result = new ArrayBuffer(8);
       if (this.onload) {
@@ -51,7 +51,7 @@ global.FileReader = class FileReader {
     }, 0);
   }
 
-  readAsText(blob: Blob) {
+  readAsText(blob) {
     setTimeout(() => {
       this.result = 'fake text content';
       if (this.onload) {
@@ -59,4 +59,4 @@ global.FileReader = class FileReader {
       }
     }, 0);
   }
-} as any;
+};
