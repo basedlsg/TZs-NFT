@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { WalletProvider } from '@/contexts/WalletContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'Proof of Becoming',
@@ -15,7 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <WalletProvider>{children}</WalletProvider>
+        <ErrorBoundary>
+          <NotificationProvider>
+            <WalletProvider>{children}</WalletProvider>
+          </NotificationProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

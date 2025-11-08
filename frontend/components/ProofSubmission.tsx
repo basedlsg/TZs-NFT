@@ -7,6 +7,8 @@ import { getSoulNFTContract } from '@/lib/soulNFT';
 import { generateArt } from '@/lib/artGenerator';
 import { pinToIPFS } from '@/lib/ipfs';
 import { validateImage, validateDataUrl } from '@/lib/validation';
+import { useNotification } from '@/contexts/NotificationContext';
+import { formatApiError, formatWalletError, formatContractError } from '@/lib/errorMessages';
 
 interface VerificationChecks {
   validGoal: boolean;
@@ -31,6 +33,7 @@ interface ProofSubmissionProps {
 
 export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmissionProps) {
   const { account } = useWallet();
+  const { showError, showSuccess, showWarning } = useNotification();
   const [entry, setEntry] = useState<DiaryEntry | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -52,14 +55,18 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
       const diaryEntry = await getDiaryEntry(diaryEntryId);
 
       if (!diaryEntry) {
-        setError('Diary entry not found');
+        const errorMsg = 'Diary entry not found';
+        setError(errorMsg);
+        showError(errorMsg);
         return;
       }
 
       setEntry(diaryEntry);
     } catch (err) {
       console.error('Failed to load diary entry:', err);
-      setError('Failed to load diary entry');
+      const errorMsg = 'Failed to load diary entry. Please try again.';
+      setError(errorMsg);
+      showError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +83,9 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
     // Validate image file
     const validation = validateImage(file);
     if (!validation.valid) {
-      setError(validation.error || 'Invalid image file');
+      const errorMsg = validation.error || 'Invalid image file';
+      setError(errorMsg);
+      showError(errorMsg);
       setSecondPhotoFile(null);
       setSecondPhotoDataUrl(undefined);
       return;
@@ -88,13 +97,16 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
       setSecondPhotoDataUrl(reader.result as string);
       setSecondPhotoFile(file);
       setError(null);
+      showSuccess('Second photo uploaded successfully');
     };
     reader.readAsDataURL(file);
   };
 
   const submitProof = async (withSecondPhoto: boolean = false) => {
     if (!entry) {
-      setError('No entry to verify');
+      const msg = 'No entry to verify';
+      setError(msg);
+      showError(msg);
       return;
     }
 
@@ -102,11 +114,15 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
     if (entry.imageDataUrl) {
       const imageValidation = validateDataUrl(entry.imageDataUrl);
       if (!imageValidation.valid) {
-        setError(imageValidation.error || 'Invalid image data');
+        const msg = imageValidation.error || 'Invalid image data';
+        setError(msg);
+        showError(msg);
         return;
       }
     } else {
-      setError('No image found in diary entry');
+      const msg = 'No image found in diary entry';
+      setError(msg);
+      showError(msg);
       return;
     }
 
@@ -114,7 +130,9 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
     if (withSecondPhoto && secondPhotoDataUrl) {
       const secondImageValidation = validateDataUrl(secondPhotoDataUrl);
       if (!secondImageValidation.valid) {
-        setError(secondImageValidation.error || 'Invalid second image data');
+        const msg = secondImageValidation.error || 'Invalid second image data';
+        setError(msg);
+        showError(msg);
         return;
       }
     }
@@ -140,18 +158,27 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
       });
 
       if (!response.ok) {
-        throw new Error(`Verification failed: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw { response: { status: response.status, data: errorData } };
       }
 
       const result: VerificationResult = await response.json();
       setVerificationResult(result);
 
-      if (result.verified && onSuccess) {
-        onSuccess(result);
+      if (result.verified) {
+        showSuccess(`Proof verified with ${result.confidence}% confidence!`);
+        if (onSuccess) {
+          onSuccess(result);
+        }
+      } else if (result.needsSecondPhoto) {
+        showWarning('Verification inconclusive. Please provide a second photo.');
       }
     } catch (err) {
       console.error('Verification error:', err);
-      setError('Failed to verify proof. Please try again.');
+      const formatted = formatApiError(err);
+      const msg = formatted.message + (formatted.suggestion ? ` ${formatted.suggestion}` : '');
+      setError(formatted.message);
+      showError(msg);
     } finally {
       setIsVerifying(false);
     }
@@ -159,12 +186,16 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
 
   const evolveNFT = async () => {
     if (!account) {
-      setError('Please connect your wallet to evolve your Soul NFT');
+      const msg = 'Please connect your wallet to evolve your Soul NFT';
+      setError(msg);
+      showError(msg);
       return;
     }
 
     if (!entry) {
-      setError('No entry data available');
+      const msg = 'No entry data available';
+      setError(msg);
+      showError(msg);
       return;
     }
 
@@ -178,7 +209,9 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
       const tokenId = await soulNFT.getTokenIdByOwner(account);
 
       if (tokenId === null) {
-        setError('You don\'t have a Soul NFT yet. Please mint one first.');
+        const msg = 'You don\'t have a Soul NFT yet. Please mint one first.';
+        setError(msg);
+        showError(msg);
         setIsEvolving(false);
         return;
       }
@@ -296,13 +329,12 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
 
       setEvolutionComplete(true);
       setError(null);
+      showSuccess(`Soul NFT evolved to stage ${nextStage}! 🎨`);
     } catch (err) {
       console.error('Evolution error:', err);
-      if (err instanceof Error) {
-        setError(`Failed to evolve NFT: ${err.message}`);
-      } else {
-        setError('Failed to evolve NFT. Please try again.');
-      }
+      const formatted = formatContractError(err);
+      setError(formatted);
+      showError(formatted);
     } finally {
       setIsEvolving(false);
     }
