@@ -1,0 +1,11 @@
+{
+  "name": "pob-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "compile": "./ligo compile contract soul_nft.mligo > build/soul_nft.tz",
+    "test": "./ligo run test soul_nft.test.mligo",
+    "install-ligo": "curl https://gitlab.com/ligolang/ligo/-/releases/1.6.0/downloads/ligo-static-linux -o ligo && chmod +x ligo"
+  },
+  "description": "Smart contracts for Proof of Becoming Soul-NFTs"
+}
