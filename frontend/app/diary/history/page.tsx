@@ -103,8 +103,13 @@ export default function DiaryHistoryPage() {
                 )}
 
                 <footer>
-                  <small>Entry ID: {entry.id}</small>
-                  <small>Hash: {entry.hash.substring(0, 16)}...</small>
+                  <div className="footer-info">
+                    <small>Entry ID: {entry.id}</small>
+                    <small>Hash: {entry.hash.substring(0, 16)}...</small>
+                  </div>
+                  <Link href={`/verify/${entry.id}`} className="verify-button">
+                    Verify Proof →
+                  </Link>
                 </footer>
               </article>
             ))}
@@ -245,15 +250,37 @@ export default function DiaryHistoryPage() {
         .entry-card footer {
           display: flex;
           justify-content: space-between;
+          align-items: center;
           margin-top: 1rem;
           padding-top: 0.75rem;
           border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-info {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
         }
 
         .entry-card footer small {
           font-size: 0.75rem;
           color: #a0aec0;
           font-family: monospace;
+        }
+
+        .verify-button {
+          padding: 0.5rem 1rem;
+          background-color: #3182ce;
+          color: white;
+          text-decoration: none;
+          border-radius: 4px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          transition: background-color 0.2s;
+        }
+
+        .verify-button:hover {
+          background-color: #2c5aa0;
         }
       `}</style>
     </div>
