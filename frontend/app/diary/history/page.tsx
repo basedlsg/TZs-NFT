@@ -50,9 +50,14 @@ export default function DiaryHistoryPage() {
   return (
     <div className="history-page">
       <header>
-        <Link href="/diary" className="back-link">
-          ← Back to New Entry
-        </Link>
+        <div className="header-nav">
+          <Link href="/diary" className="back-link">
+            ← Back to New Entry
+          </Link>
+          <Link href="/settings" className="settings-link">
+            Settings
+          </Link>
+        </div>
         <h1>Diary History</h1>
         <p>All your entries are encrypted and stored securely in your browser.</p>
       </header>
@@ -119,14 +124,21 @@ export default function DiaryHistoryPage() {
           margin-bottom: 3rem;
         }
 
-        .back-link {
-          display: inline-block;
-          color: #3182ce;
-          text-decoration: none;
+        .header-nav {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           margin-bottom: 1rem;
         }
 
-        .back-link:hover {
+        .back-link,
+        .settings-link {
+          color: #3182ce;
+          text-decoration: none;
+        }
+
+        .back-link:hover,
+        .settings-link:hover {
           text-decoration: underline;
         }
 

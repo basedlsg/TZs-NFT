@@ -49,12 +49,18 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-8 flex justify-center gap-4">
           <Link
             href="/diary"
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
             Create Diary Entry →
+          </Link>
+          <Link
+            href="/settings"
+            className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+          >
+            Settings
           </Link>
         </div>
 

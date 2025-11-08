@@ -10,9 +10,14 @@ export default function DiaryPage() {
   return (
     <div className="diary-page">
       <header>
-        <Link href="/" className="back-link">
-          ← Back to Home
-        </Link>
+        <div className="header-nav">
+          <Link href="/" className="back-link">
+            ← Back to Home
+          </Link>
+          <Link href="/settings" className="settings-link">
+            Settings
+          </Link>
+        </div>
         <h1>New Diary Entry</h1>
         <p>
           Record your progress towards your goals. All entries are encrypted client-side
@@ -44,14 +49,21 @@ export default function DiaryPage() {
           margin-bottom: 3rem;
         }
 
-        .back-link {
-          display: inline-block;
-          color: #3182ce;
-          text-decoration: none;
+        .header-nav {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
           margin-bottom: 1rem;
         }
 
-        .back-link:hover {
+        .back-link,
+        .settings-link {
+          color: #3182ce;
+          text-decoration: none;
+        }
+
+        .back-link:hover,
+        .settings-link:hover {
           text-decoration: underline;
         }
 
