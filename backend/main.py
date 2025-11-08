@@ -10,10 +10,10 @@ from pydantic import BaseModel
 import os
 
 # Import API routers
-from api import ipfs
+from api import ipfs, verify
 
 # Version
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 
 # Create FastAPI app
 app = FastAPI(
@@ -43,6 +43,7 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(ipfs.router)
+app.include_router(verify.router)
 
 
 # Response models
@@ -73,12 +74,7 @@ async def health_check():
     }
 
 
-# Future endpoints (placeholders for Week 4+)
-# @app.post("/api/verify-proof")
-# async def verify_proof(proof_data):
-#     """Verify proof of ritual completion using AI"""
-#     pass
-
+# Future endpoints (placeholders for Week 5+)
 # @app.get("/api/quantum-seed")
 # async def get_quantum_seed():
 #     """Generate quantum random seed for NFT evolution"""
