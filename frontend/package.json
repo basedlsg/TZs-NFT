@@ -11,7 +11,8 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
-    "deploy:contract": "ts-node scripts/deploy-contract.ts"
+    "deploy:contract": "ts-node scripts/deploy-contract.ts",
+    "test:contract": "ts-node scripts/test-contract-integration.ts"
   },
   "dependencies": {
     "next": "^15.0.0",
