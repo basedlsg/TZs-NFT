@@ -143,8 +143,8 @@ See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for details.
 
 ## 📋 Roadmap
 
-- [x] **Week 1:** Scoping & skeleton ← **You are here**
-- [ ] **Week 2:** Wallet connect + FA2 contract
+- [x] **Week 1:** Scoping & skeleton
+- [x] **Week 2:** Wallet connect + FA2 contract + Backend scaffold ← **You are here**
 - [ ] **Week 3:** Private journal + encryption
 - [ ] **Week 4:** Proof submission + AI verify
 - [ ] **Week 5:** Generative NFT art
