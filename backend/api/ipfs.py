@@ -12,6 +12,7 @@ import os
 import httpx
 from typing import Optional, Dict, Any
 from middleware.ratelimit import limiter, IPFS_LIMIT
+from lib.retry import retry_async, PATIENT_RETRY
 
 
 router = APIRouter(prefix="/api/ipfs", tags=["ipfs"])
@@ -56,90 +57,114 @@ def is_ipfs_available() -> bool:
         return False
 
 
+async def _pin_to_ipfs_internal(data: bytes) -> str:
+    """
+    Internal function to pin data to IPFS.
+
+    Raises exceptions for retry logic.
+    """
+    # Use IPFS HTTP API
+    files = {"file": data}
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{IPFS_API_URL}/api/v0/add",
+            files=files,
+            params={"pin": "true"},  # Pin by default
+            timeout=30.0
+        )
+
+    if response.status_code != 200:
+        raise Exception(f"IPFS add failed with status {response.status_code}: {response.text}")
+
+    result = response.json()
+    return result["Hash"]
+
+
 async def pin_to_ipfs(data: bytes) -> str:
     """
-    Pin data to IPFS node
+    Pin data to IPFS node with retry logic.
 
     Args:
         data: Raw bytes to pin
 
     Returns:
         IPFS CID (Content Identifier)
+
+    Raises:
+        HTTPException if pinning fails after retries
     """
     try:
-        # Use IPFS HTTP API
-        files = {"file": data}
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{IPFS_API_URL}/api/v0/add",
-                files=files,
-                params={"pin": "true"},  # Pin by default
-                timeout=30.0
-            )
-
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"IPFS add failed: {response.text}"
-            )
-
-        result = response.json()
-        return result["Hash"]
+        # Use retry logic for reliability
+        cid = await retry_async(_pin_to_ipfs_internal, data, config=PATIENT_RETRY)
+        return cid
 
     except httpx.TimeoutException:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="IPFS node timeout"
+            detail="IPFS node timeout after retries"
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"IPFS error: {str(e)}"
+            detail=f"IPFS error after retries: {str(e)}"
         )
+
+
+async def _retrieve_from_ipfs_internal(cid: str) -> bytes:
+    """
+    Internal function to retrieve data from IPFS.
+
+    Raises exceptions for retry logic.
+    """
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{IPFS_API_URL}/api/v0/cat",
+            params={"arg": cid},
+            timeout=30.0
+        )
+
+    if response.status_code == 200:
+        return response.content
+    elif response.status_code == 404:
+        # Don't retry 404s
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"CID not found: {cid}"
+        )
+    else:
+        raise Exception(f"IPFS cat failed with status {response.status_code}: {response.text}")
 
 
 async def retrieve_from_ipfs(cid: str) -> bytes:
     """
-    Retrieve data from IPFS
+    Retrieve data from IPFS with retry logic.
 
     Args:
         cid: IPFS Content Identifier
 
     Returns:
         Raw bytes from IPFS
+
+    Raises:
+        HTTPException if retrieval fails after retries
     """
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{IPFS_API_URL}/api/v0/cat",
-                params={"arg": cid},
-                timeout=30.0
-            )
+        # Use retry logic for reliability
+        data = await retry_async(_retrieve_from_ipfs_internal, cid, config=PATIENT_RETRY)
+        return data
 
-        if response.status_code == 200:
-            return response.content
-        elif response.status_code == 404:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"CID not found: {cid}"
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"IPFS cat failed: {response.text}"
-            )
-
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 404)
+        raise
     except httpx.TimeoutException:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="IPFS node timeout"
+            detail="IPFS node timeout after retries"
         )
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"IPFS error: {str(e)}"
+            detail=f"IPFS error after retries: {str(e)}"
         )
 
 
