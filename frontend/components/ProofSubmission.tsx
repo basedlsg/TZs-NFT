@@ -4,6 +4,8 @@ import { useState, useEffect, ChangeEvent } from 'react';
 import { getDiaryEntry, DiaryEntry } from '@/lib/diaryStorage';
 import { useWallet } from '@/contexts/WalletContext';
 import { getSoulNFTContract } from '@/lib/soulNFT';
+import { generateArt } from '@/lib/artGenerator';
+import { pinToIPFS } from '@/lib/ipfs';
 
 interface VerificationChecks {
   validGoal: boolean;
@@ -186,22 +188,73 @@ export default function ProofSubmission({ diaryEntryId, onSuccess }: ProofSubmis
           .join('');
       }
 
-      // Create metadata URI (for now, a simple JSON with proof hash)
-      // In Week 5, this will include IPFS-hosted generative art
+      // Generate artwork from seed
+      console.log('Generating artwork from seed...');
+      const artwork = generateArt(seed, 512, 512, nextStage);
+      console.log('Artwork generated with colors:', artwork.colors);
+
+      // Pin artwork to IPFS
+      let imageUri = artwork.dataUrl; // Fallback to data URI
+
+      try {
+        console.log('Pinning artwork to IPFS...');
+        const artworkBlob = artwork.dataUrl;
+
+        // Convert data URL to base64 data for IPFS
+        const ipfsResult = await pinToIPFS(artworkBlob, {
+          tokenId,
+          stage: nextStage,
+          seed,
+          type: 'image',
+        });
+
+        imageUri = ipfsResult.uri;
+        console.log('Artwork pinned to IPFS:', imageUri);
+      } catch (ipfsError) {
+        console.warn('Failed to pin artwork to IPFS, using data URI:', ipfsError);
+        // Fall back to data URI if IPFS fails
+      }
+
+      // Create NFT metadata
       const metadata = {
         name: `Soul NFT #${tokenId}`,
-        description: `Evolution Stage ${nextStage}`,
+        description: `Evolution Stage ${nextStage} - Proof of ${entry.goalId}`,
+        image: imageUri,
         stage: nextStage,
         seed,
-        seedSource,  // Indicate if seed is quantum or pseudo
+        seedSource,
+        colors: artwork.colors,
+        geometry: artwork.geometry,
         proofHash: entry.hash,
         goalId: entry.goalId,
         timestamp: Date.now(),
+        attributes: [
+          { trait_type: 'Stage', value: nextStage },
+          { trait_type: 'Goal', value: entry.goalId },
+          { trait_type: 'Seed Source', value: seedSource },
+          { trait_type: 'Shapes', value: artwork.geometry.shapes },
+          { trait_type: 'Symmetry', value: artwork.geometry.symmetry ? 'Yes' : 'No' },
+        ],
       };
 
-      // For now, store metadata as data URI
-      // In Week 5, this will be pinned to IPFS
-      const metadataUri = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`;
+      // Pin metadata to IPFS
+      let metadataUri: string;
+
+      try {
+        console.log('Pinning metadata to IPFS...');
+        const metadataResult = await pinToIPFS(JSON.stringify(metadata), {
+          tokenId,
+          stage: nextStage,
+          type: 'metadata',
+        });
+
+        metadataUri = metadataResult.uri;
+        console.log('Metadata pinned to IPFS:', metadataUri);
+      } catch (ipfsError) {
+        console.warn('Failed to pin metadata to IPFS, using data URI:', ipfsError);
+        // Fallback to data URI
+        metadataUri = `data:application/json;base64,${btoa(JSON.stringify(metadata))}`;
+      }
 
       // Call evolve on the contract
       const result = await soulNFT.evolve({

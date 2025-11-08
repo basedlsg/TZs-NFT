@@ -49,12 +49,18 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-8 flex justify-center gap-4">
+        <div className="mt-8 flex justify-center gap-4 flex-wrap">
           <Link
             href="/diary"
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
             Create Diary Entry →
+          </Link>
+          <Link
+            href="/gallery"
+            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+          >
+            View Gallery 🎨
           </Link>
           <Link
             href="/settings"
@@ -64,9 +70,9 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>Status:</strong> MVP in development - Week 3 (Private Journal + Encryption)
+        <div className="mt-8 p-4 bg-purple-50 rounded-lg">
+          <p className="text-sm text-purple-800">
+            <strong>Status:</strong> MVP in development - Week 5 (Generative NFT Art + QRNG)
           </p>
         </div>
       </div>
