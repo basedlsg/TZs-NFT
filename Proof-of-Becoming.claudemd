@@ -1,0 +1,203 @@
+
+# Proof of Becoming (PoB) — Build Plan
+**File:** `Proof-of-Becoming.claudemd`  
+**Purpose:** End-to-end, *working* build plan for a Tezos/Etherlink dApp: private ritual journal → goal → proof → AI verify → NFT evolves.  
+**Principles:** No mock data. No over‑engineering. Ship in small, verifiable increments.
+
+---
+
+## 0) Non‑Negotiables (Quality Gates)
+- ✅ **Working end-to-end flow** on testnet before any polish.
+- ✅ **No mock data in MVP**: real wallet connect, real contract calls, real file encryption.
+- ✅ **Small surface area**: 3–5 goal templates only; 1 NFT per user; single evolution function.
+- ✅ **Security hygiene**: client-side AES‑GCM encryption for diary; least‑privilege keys; input validation; rate limits.
+- ✅ **Docs-first**: each merge adds/updates README sections (runbook, env vars, threat model, test steps).
+- ✅ **Observability**: minimal logs/metrics (verification latency, evolve success rate, error codes).
+
+---
+
+## 1) Step‑By‑Step Plan (Week‑by‑Week)
+### Week 1 — Scoping & Skeleton
+- [ ] Define the MVP loop: **goal → proof (photo+text) → verify → evolve NFT**.
+- [ ] Choose stacks: React/Next.js, Taquito, FA2 contract, FastAPI, IPFS (encrypted), Three.js.
+- [ ] Create repo, CI, branch rules (PR checks: unit tests + lint + typecheck).
+- [ ] Wireframe screens: Login, Set Goal, Submit Proof, NFT View, History.
+
+### Week 2 — Wallet & Contract Scaffolding
+- [ ] Integrate Tezos wallet connect (Beacon/Taquito).
+- [ ] Deploy **FA2 Soul‑NFT** on Ghostnet/Etherlink test env.
+- [ ] Contract functions: `mintSoul(address)`, `evolve(tokenId, stage, seed, metadataUri)`.
+- [ ] Write contract tests (transfer disabled; 1-per-address invariant).
+
+### Week 3 — Private Journal + Storage
+- [ ] Client-side diary (IndexedDB) with export/import.
+- [ ] Client-side **AES‑GCM** encryption → optional IPFS pin (cipher blob only).
+- [ ] Store only **hash/commitment** on chain (diary stays private).
+
+### Week 4 — Proof Submission & Basic Verify
+- [ ] Goal templates (3–5): Run 5km, Read 20 pages, Meditate 10min, Make a sketch.
+- [ ] Upload flow: 1 photo + short reflection.
+- [ ] **AI verify v1**: heuristic + lightweight vision model; confidence threshold; ask for second photo if low.
+- [ ] On success: call `evolve()`; update on‑chain metadata with new stage + seed + art URI.
+
+### Week 5 — NFT Generative Art
+- [ ] Quantum-seeded generator (QRNG API fallback → CSPRNG). Seed controls color/geometry/interference pattern.
+- [ ] Render PNG and pin to IPFS; include link in metadata URI.
+- [ ] Gallery page (public), personal dashboard (private diary link only).
+
+### Week 6 — Hardening & Demo
+- [ ] Abuse filters: image moderation, file type/size limits, rate limiting.
+- [ ] Error handling, retries, user messages.
+- [ ] E2E tests: wallet → goal → evolve happy path; negative paths.
+- [ ] Public testnet demo + short video walkthrough.
+
+### Weeks 7–8 — Quantum & Trust Layer (v1.1)
+- [ ] Replace RNG with **QRNG** (ANU/Azure) for evolution seed.
+- [ ] On‑chain record: hash(goalId | timestamp | verifier) to anchor proofs without leaking diaries.
+- [ ] Anonymized public ritual feed.
+
+### Weeks 9–12 — SDK & Pilot
+- [ ] Minimal **PoB SDK**: goal template schema, verifier interface, evolve helper, React hooks.
+- [ ] Pilot with 10–20 creators; feedback loop; docs polish.
+- [ ] “Chain of Becoming” online gallery launch.
+
+---
+
+## 2) Roles & Committees
+### A) **Tezos Build Committee**
+**Mandate:** Keep contracts safe, transactions reliable, and UX sane on Tezos/Etherlink.  
+**Leads:** Smart‑contract dev (chair), dApp engineer, security reviewer.
+
+**Duties**
+- Select FA2 template; configure transfer restrictions and metadata schema.
+- Enforce **least privilege**: one dedicated key for evolve; user-sign meta‑tx where possible.
+- Decide L1 (Tezos) vs **Etherlink (EVM L2)** per feature; document bridging if needed.
+- Maintain test plans (unit/property tests; testnet rehearsals).
+
+**Deliverables**
+- Contract spec + invariants.
+- Threat model (reentrancy, replay, upgradeability, admin powers).
+- Gas/fee budget and UX policy (batching, retries).
+
+### B) **Claude Code Committee**
+**Mandate:** Use Claude Code effectively **without over‑engineering**. Speed up real work, not toy demos.
+
+**Duties**
+- Define approved workflows (write tests first, generate stubs, diff review, apply patches).
+- Guardrails: never commit secrets; no “mock data” beyond unit tests; generate fixtures from **real API shapes**.
+- Enforce review rubric for AI‑generated code (complexity, security, performance, readability).
+- Maintain prompts/snippets for repetitive tasks (contract bindings, SDK boilerplate, Typed client).
+
+**Deliverables**
+- `CLAUDE.md` with commands, workflows, and do/don’t list.
+- Weekly code quality audit (spot‑check PRs touched by Claude Code).
+
+---
+
+## 3) Best Practices — Tezos & Etherlink
+### Contracts & Tokens
+- Prefer **FA2** standard; keep semantics minimal (single Soul‑NFT per user).
+- Disable or strictly guard transfers; expose explicit `evolve()` entrypoint.
+- Record **hash commitments** for proofs; keep PII off-chain.
+- Use events for off‑chain indexers; avoid heavy on‑chain storage bloat.
+
+### dApp & Taquito
+- Use **Taquito** for wallet, contract calls, and parsing Tezos data.
+- Separate **read vs write** paths; optimistic UI only after confirmations.
+- Handle fees/limits gracefully; surface clear errors to users.
+
+### Security
+- Client-side **AES‑GCM** encryption for diaries (keys never leave client).
+- Validation: file type/size, content checks, image moderation.
+- Admin powers minimized; if admin exists, document scope & timelock; log usage.
+- Rate‑limit verification endpoints; store hashes, not plaintext diary data.
+
+### Etherlink Choice
+- Use Etherlink (EVM L2) for cheaper, faster UX if needed; bridge or mirror state selectively.
+- Keep canonical identity on Tezos L1 if desired; document source‑of‑truth for users.
+
+---
+
+## 4) Common Pitfalls → Practical Solutions
+- **Over‑complicated tokens** → Keep 1-per-user NFT; evolution only via metadata update.
+- **Mocked flows in MVP** → Wire real wallets/contracts day 1; unit-test around them.
+- **Leaky privacy** → Encrypt client-side; pin only ciphertext; avoid server-side key custody.
+- **Flaky verification** → Narrow templates; combine heuristics + vision; add “second proof” fallback.
+- **Admin backdoors** → Document admin scope; on-chain events; optional timelock; plan to renounce/admin‑light.
+- **Cost spikes** → Batch writes on L2; minimal on-chain data; cache reads; compress images.
+- **Unclear ownership** → RACI per deliverable; PRs must tag owner + reviewer.
+
+---
+
+## 5) Engineering Tasks (Issue Seeds)
+- Contract: FA2 soul token (no transfer), evolve metadata, tests.
+- API: verify endpoint (heuristics + vision), QRNG seed fetcher, moderation.
+- Frontend: wallet connect, goal templates, proof upload, NFT viewer, gallery.
+- Storage: AES‑GCM wrapper, IPFS pin, hash commitment flow.
+- Observability: basic metrics, log scrubber, error taxonomy.
+- Docs: runbook, threat model, test plan, onboarding script.
+
+---
+
+## 6) RACI (Condensed)
+- **Contracts:** R(A) Smart‑contract dev; C Security; I Product.
+- **Verification API:** R(A) AI engineer; C Security; I Frontend.
+- **Frontend:** R(A) Frontend dev; C Product; I Contracts.
+- **Privacy/Storage:** R(A) Security lead; C Frontend; I AI.
+- **SDK:** R(A) dApp engineer; C Committee chairs; I Pilot creators.
+
+---
+
+## 7) Testing Matrix
+- Unit: contract invariants; encryption/decryption; image validators.
+- Integration: wallet → evolve; IPFS pin & retrieve; QRNG seeding.
+- E2E: full ritual (goal→proof→verify→evolve), error branches (low confidence → second proof).
+- Non‑functional: load test verify endpoint; latency budget; failover of QRNG → CSPRNG.
+
+---
+
+## 8) “Definition of Done” (MVP)
+- User mints 1 Soul‑NFT, sets a goal, uploads real proof, and sees on‑chain evolution.
+- Diary stays private (local or encrypted IPFS); on‑chain only has commitments + metadata.
+- Public gallery displays evolved art; personal dashboard shows history.
+- README explains end‑to‑end local setup and testnet deploy in <20 minutes.
+
+---
+
+## 9) Claude Code — Working Rules (No Over‑Engineering)
+- Use Claude Code to propose **tests first**, then stubs, then concrete impl.
+- Ban: generating huge scaffolds, introducing unfamiliar frameworks, or inventing mock APIs.
+- Require: diffs under review; explain changes; include tests; run locally before commit.
+- Keep prompts in repo; prefer small iterative commands over single mega‑prompt.
+
+---
+
+## 10) Architecture Sketch (High Level)
+**Client (Next.js)** → wallet connect (Taquito) → **Verify API (FastAPI)** → QRNG API → IPFS pin → **FA2 Contract (Tezos/Etherlink)**  
+Return: token metadata URI → Client renders updated NFT art.
+
+---
+
+## 11) Reference Checklist (before grant demo)
+- [ ] 3–5 goal templates wired to verifiers.
+- [ ] Real testnet contract + explorer links.
+- [ ] Evolution art seeded by QRNG (with fallback).
+- [ ] Public gallery + anonymized feed.
+- [ ] Threat model + mitigations in README.
+- [ ] Demo video & walkthrough docs.
+
+---
+
+## 12) Appendix — Draft Budget & Timeline
+- M1 Prototype Loop (6 wks): $15k
+- M2 AI & Quantum (6 wks): $20k
+- M3 SDK & Pilot (8 wks): $25k
+
+---
+
+## 13) Sources & Further Reading (shortlist)
+- Tezos FA2 token standard (TZIP‑12)
+- Taquito dApp SDK (wallet + contract calls)
+- LIGO smart-contract security patterns
+- Etherlink L2 (EVM‑compatible smart rollup) docs
+- Claude Code best practices (workflows & guardrails)
