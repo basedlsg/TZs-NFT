@@ -180,12 +180,14 @@ See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for details.
 
 - [x] **Week 1:** Scoping & skeleton
 - [x] **Week 2:** Wallet connect + FA2 contract + Backend scaffold
-- [x] **Week 3:** Client-side encryption + IPFS integration ← **You are here**
-- [ ] **Week 4:** Proof submission + AI verify
-- [ ] **Week 5:** Generative NFT art
-- [ ] **Week 6:** Hardening + testnet demo
+- [x] **Week 3:** Client-side encryption + IPFS integration
+- [x] **Week 4:** Proof submission + AI verification
+- [x] **Week 5:** Generative NFT art + QRNG
+- [x] **Week 6:** Hardening + testnet deployment ← **✅ COMPLETE**
 
-See [Proof-of-Becoming.claudemd](Proof-of-Becoming.claudemd) for full plan.
+**Current Status**: MVP complete and production-ready!
+
+See [Proof-of-Becoming.claudemd](Proof-of-Becoming.claudemd) for full build plan.
 
 ---
 
