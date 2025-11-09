@@ -281,7 +281,7 @@ async def verify_proof(request: Request, body: VerifyRequest):
     final_verified = verified and confidence >= CONFIDENCE_THRESHOLD_PASS
     needs_second_photo = (
         verified
-        and not request.secondImageDataUrl
+        and not body.secondImageDataUrl
         and CONFIDENCE_THRESHOLD_SECOND_PHOTO <= confidence < CONFIDENCE_THRESHOLD_PASS
     )
 
@@ -289,7 +289,7 @@ async def verify_proof(request: Request, body: VerifyRequest):
     if final_verified:
         feedback = (
             feedback
-            or f"Proof verified! Your {VALID_GOALS.get(request.goalId)} goal is confirmed."
+            or f"Proof verified! Your {VALID_GOALS.get(body.goalId)} goal is confirmed."
         )
     elif needs_second_photo:
         feedback = f"Verification uncertain (confidence: {confidence}%). Please submit a second photo for additional verification."
