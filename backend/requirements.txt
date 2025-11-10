@@ -1,0 +1,23 @@
+# FastAPI and server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.0
+
+# Rate limiting
+slowapi==0.1.9
+
+# CORS
+python-multipart==0.0.6
+
+# HTTP client (for IPFS and APIs)
+httpx==0.26.0
+
+# Testing
+pytest==7.4.0
+pytest-asyncio==0.21.0
+
+# Future dependencies (commented for now, uncomment when needed)
+# python-dotenv==1.0.0  # Environment variables
+# Pillow==10.2.0  # Image processing
+# openai==1.10.0  # AI verification (Week 4)
+# requests==2.31.0  # HTTP requests for QRNG APIs

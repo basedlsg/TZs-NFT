@@ -1,0 +1,13 @@
+{
+  "name": "pob-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "install-ligo": "./install_ligo.sh",
+    "compile": "./ligo compile contract soul_nft_simple.mligo > build/soul_nft.tz && ./ligo compile contract soul_nft_simple.mligo --format json > build/soul_nft.json",
+    "compile:expr": "./ligo compile expression cameligo 'init_storage' --init-file soul_nft_simple.mligo > build/init_storage.tz",
+    "test": "echo 'LIGO tests coming in next PR'",
+    "clean": "rm -rf build && mkdir -p build"
+  },
+  "description": "Smart contracts for Proof of Becoming Soul-NFTs"
+}
