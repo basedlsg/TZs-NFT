@@ -73,3 +73,4 @@ contracts/ligo
 # package-lock.json
 # yarn.lock
 next-env.d.ts
+*.pid

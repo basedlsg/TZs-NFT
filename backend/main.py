@@ -9,6 +9,10 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from slowapi.errors import RateLimitExceeded
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Import API routers
 from api import ipfs, verify, qrng
