@@ -144,13 +144,13 @@ async def ai_vision_verification(
     goal_id: str, reflection: str, image_data_url: str, second_image_data_url: Optional[str] = None
 ) -> tuple[int, str]:
     """
-    Perform AI vision model verification using OpenAI GPT-4 Vision.
+    Perform AI vision model verification using Groq Vision API.
 
     Returns:
         (confidence_adjustment, feedback)
     """
-    # Check if OpenAI API key is configured
-    api_key = os.getenv("OPENAI_API_KEY")
+    # Check if Groq API key is configured
+    api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         return 0, "AI verification not configured (no API key)"
 
@@ -187,14 +187,14 @@ Consider:
             )
             prompt += "\n\nA second image was provided for additional verification."
 
-        # Call OpenAI Vision API
+        # Call Groq Vision API (using llama-3.2-90b-vision-preview)
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
 
         payload = {
-            "model": "gpt-4-vision-preview",
+            "model": "llama-3.2-90b-vision-preview",
             "messages": [
                 {
                     "role": "user",
@@ -202,11 +202,12 @@ Consider:
                 }
             ],
             "max_tokens": 300,
+            "temperature": 0.5,
         }
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
+                "https://api.groq.com/openai/v1/chat/completions",
                 headers=headers,
                 json=payload,
                 timeout=30.0,
