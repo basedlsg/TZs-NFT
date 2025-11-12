@@ -72,3 +72,4 @@ contracts/ligo
 # Uncomment if you want to ignore lock files
 # package-lock.json
 # yarn.lock
+next-env.d.ts
